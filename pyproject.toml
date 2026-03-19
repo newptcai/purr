@@ -18,5 +18,8 @@ dependencies = [
 [project.scripts]
 purr = "kitten_cli.cli:app"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/kitten_cli"]
