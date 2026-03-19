@@ -5,28 +5,27 @@ text-to-speech on CPU, with model management and optional audio playback.
 
 ## Installation
 
-### Install with uv
+> **Note:** Linux only. Requires Python ≥ 3.8.
 
-```bash
-uv pip install git+https://github.com/newptcai/purr
-```
+### Recommended: lean install (no torch/CUDA)
 
-This automatically installs KittenTTS and all other dependencies.
-
-Or, if you clone the repo:
+The default install pulls `torch` and NVIDIA CUDA packages (several GB) as an unnecessary
+side-effect of `kittentts → misaki[en] → spacy-curated-transformers`. Use the provided script
+to bypass this:
 
 ```bash
 git clone https://github.com/newptcai/purr
 cd purr
-uv pip install .
+uv venv && source .venv/bin/activate
+bash install.sh
 ```
 
-> **Note:** Linux only. Requires Python ≥ 3.8.
+### Simple install (includes torch/CUDA bloat)
 
-> **Warning:** Installation currently downloads `torch` and NVIDIA CUDA packages (several GB)
-> as a side-effect of `kittentts → misaki[en] → spacy-curated-transformers → torch`. This is
-> an upstream packaging issue; none of those packages are actually used at runtime. Track it at
-> [KittenML/KittenTTS](https://github.com/KittenML/KittenTTS/issues).
+```bash
+uv venv && source .venv/bin/activate
+uv pip install git+https://github.com/newptcai/purr
+```
 
 ## Quick Start
 
