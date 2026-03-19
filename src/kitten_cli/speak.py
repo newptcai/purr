@@ -1,3 +1,4 @@
+import os
 import time
 from pathlib import Path
 from typing import Optional
@@ -36,7 +37,9 @@ def synthesize(
 
     model_dir = MODELS_DIR / model
     repo_id = MODEL_REGISTRY[model]
+    os.environ["HF_HUB_OFFLINE"] = "1"
     tts = KittenTTS(repo_id, cache_dir=str(model_dir))
+    del os.environ["HF_HUB_OFFLINE"]
 
     audio = tts.generate(text, voice=voice, speed=speed, clean_text=clean)
 
