@@ -5,7 +5,7 @@ text-to-speech on CPU, with model management and optional audio playback.
 
 ## Installation
 
-> **Note:** Linux only. Requires Python ≥ 3.8.
+> **Note:** Linux only. Requires Python ≥ 3.8 and [`uv`](https://github.com/astral-sh/uv).
 
 ### Recommended: lean install (no torch/CUDA)
 
@@ -16,15 +16,23 @@ to bypass this:
 ```bash
 git clone https://github.com/newptcai/purr
 cd purr
-uv venv && source .venv/bin/activate
 bash install.sh
+```
+
+`install.sh` creates a `.venv` automatically if no virtual environment is active.
+Activate it afterwards to put `purr` on your PATH:
+
+```bash
+source .venv/bin/activate
 ```
 
 ### Simple install (includes torch/CUDA bloat)
 
 ```bash
+git clone https://github.com/newptcai/purr
+cd purr
 uv venv && source .venv/bin/activate
-uv pip install git+https://github.com/newptcai/purr
+uv pip install -e .
 ```
 
 ## Quick Start
