@@ -81,8 +81,8 @@ def voices(
         )
         raise typer.Exit(1)
 
-    from kittentts import KittenTTS  # type: ignore
     from kitten_cli.models import is_model_downloaded, install_model
+    import os
 
     if not is_model_downloaded(model):
         typer.echo(f"Model '{model}' not found locally. Downloading ...")
@@ -90,7 +90,10 @@ def voices(
 
     model_dir = MODELS_DIR / model
     repo_id = MODEL_REGISTRY[model]
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    from kittentts import KittenTTS  # type: ignore
     tts = KittenTTS(repo_id, cache_dir=str(model_dir))
+    del os.environ["HF_HUB_OFFLINE"]
 
-    for v in tts.voices():
+    for v in tts.available_voices:
         typer.echo(f"  {v}")
