@@ -44,10 +44,17 @@ def speak(
     speed: float = typer.Option(DEFAULT_SPEED, "--speed", "-s", help="Speed multiplier"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output .wav file path"),
     play: bool = typer.Option(False, "--play/--no-play", "-p/-P", help="Play audio after generation"),
+    stdout: bool = typer.Option(False, "--stdout", help="Write WAV audio to stdout"),
     clean: bool = typer.Option(True, "--clean/--no-clean", help="Apply text preprocessing"),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress informational output"),
 ) -> None:
     """Synthesize speech from text or stdin."""
+    if stdout and play:
+        typer.echo("--stdout and --play cannot be used together.", err=True)
+        raise typer.Exit(1)
+    if stdout and output is not None:
+        typer.echo("--stdout and --output cannot be used together.", err=True)
+        raise typer.Exit(1)
     if text is None:
         if sys.stdin.isatty():
             typer.echo("No text provided. Pass text as an argument or pipe via stdin.", err=True)
@@ -59,7 +66,7 @@ def speak(
         raise typer.Exit(1)
 
     from kitten_cli.speak import synthesize
-    synthesize(text, model=model, voice=voice, speed=speed, output=output, play=play, clean=clean, quiet=quiet)
+    synthesize(text, model=model, voice=voice, speed=speed, output=output, play=play, stdout=stdout, clean=clean, quiet=quiet)
 
 
 @app.command()

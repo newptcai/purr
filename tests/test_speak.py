@@ -46,6 +46,35 @@ def test_synthesize_writes_file(tmp_path):
             assert result == output
 
 
+def test_synthesize_stdout_writes_wav_to_stdout():
+    mock_class, mock_tts = _make_fake_kittentts()
+    mock_tts.generate.return_value = np.zeros(24000, dtype=np.float32)
+
+    with patch("kitten_cli.speak.is_model_downloaded", return_value=True), \
+         patch("kitten_cli.speak.install_model"), \
+         patch.dict("sys.modules", {"kittentts": MagicMock(KittenTTS=mock_class)}):
+
+        import importlib
+        import kitten_cli.speak
+        importlib.reload(kitten_cli.speak)
+
+        import io
+        fake_stdout = io.BytesIO()
+
+        with patch("kitten_cli.speak.sys") as mock_sys:
+            mock_sys.stdout.buffer = fake_stdout
+            result = kitten_cli.speak.synthesize(
+                "Hello world",
+                model="nano",
+                stdout=True,
+            )
+            assert result is None
+            wav_bytes = fake_stdout.getvalue()
+            assert len(wav_bytes) > 0
+            # WAV files start with RIFF header
+            assert wav_bytes[:4] == b"RIFF"
+
+
 def test_synthesize_unknown_model():
     with patch("kitten_cli.speak._ensure_kittentts"):
         from kitten_cli.speak import synthesize

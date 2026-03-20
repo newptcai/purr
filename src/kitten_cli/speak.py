@@ -1,5 +1,7 @@
 import contextlib
+import io
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Optional
@@ -17,9 +19,10 @@ def synthesize(
     speed: float = DEFAULT_SPEED,
     output: Optional[Path] = None,
     play: bool = False,
+    stdout: bool = False,
     clean: bool = True,
     quiet: bool = False,
-) -> Path:
+) -> Optional[Path]:
     if model not in MODEL_REGISTRY:
         typer.echo(
             f"Unknown model alias '{model}'. Available: {', '.join(MODEL_REGISTRY)}",
@@ -32,9 +35,8 @@ def synthesize(
             typer.echo(f"Model '{model}' not found locally. Downloading ...")
         install_model(model)
 
-    if output is None:
-        ts = int(time.time())
-        output = Path(f"/tmp/purr-{ts}.wav")
+    if stdout:
+        quiet = True
 
     model_dir = MODELS_DIR / model
     repo_id = MODEL_REGISTRY[model]
@@ -46,6 +48,16 @@ def synthesize(
             tts = KittenTTS(repo_id, cache_dir=str(model_dir))
             audio = tts.generate(text, voice=voice, speed=speed, clean_text=clean)
     del os.environ["HF_HUB_OFFLINE"]
+
+    if stdout:
+        buf = io.BytesIO()
+        sf.write(buf, audio, SAMPLE_RATE, format="WAV")
+        sys.stdout.buffer.write(buf.getvalue())
+        return None
+
+    if output is None:
+        ts = int(time.time())
+        output = Path(f"/tmp/purr-{ts}.wav")
 
     sf.write(str(output), audio, SAMPLE_RATE)
     if not quiet:
