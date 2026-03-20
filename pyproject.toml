@@ -7,7 +7,7 @@ name = "purr"
 version = "0.1.0"
 description = "CLI wrapper for KittenTTS — model management and speech synthesis"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.8,<3.14"
 dependencies = [
     "typer>=0.12",
     "sounddevice>=0.4",
