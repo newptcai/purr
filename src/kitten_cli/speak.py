@@ -40,14 +40,21 @@ def synthesize(
 
     model_dir = MODELS_DIR / model
     repo_id = MODEL_REGISTRY[model]
+    
+    original_offline = os.environ.get("HF_HUB_OFFLINE")
     os.environ["HF_HUB_OFFLINE"] = "1"
-    from kittentts import KittenTTS  # type: ignore  # imported after HF_HUB_OFFLINE is set
-    with open(os.devnull, "w") as devnull:
-        redirect = contextlib.redirect_stdout(devnull) if quiet else contextlib.nullcontext()
-        with redirect:
-            tts = KittenTTS(repo_id, cache_dir=str(model_dir))
-            audio = tts.generate(text, voice=voice, speed=speed, clean_text=clean)
-    del os.environ["HF_HUB_OFFLINE"]
+    try:
+        from kittentts import KittenTTS  # type: ignore  # imported after HF_HUB_OFFLINE is set
+        with open(os.devnull, "w") as devnull:
+            redirect = contextlib.redirect_stdout(devnull) if quiet else contextlib.nullcontext()
+            with redirect:
+                tts = KittenTTS(repo_id, cache_dir=str(model_dir))
+                audio = tts.generate(text, voice=voice, speed=speed, clean_text=clean)
+    finally:
+        if original_offline is not None:
+            os.environ["HF_HUB_OFFLINE"] = original_offline
+        else:
+            del os.environ["HF_HUB_OFFLINE"]
 
     if stdout:
         buf = io.BytesIO()

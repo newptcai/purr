@@ -51,19 +51,15 @@ def setup_mock_kittentts():
 @pytest.fixture
 def mock_models_dir(tmp_path):
     """Fixture that provides a temporary models directory for testing."""
-    # Mock the config module's MODELS_DIR
-    from kitten_cli import config
-    original_models_dir = config.MODELS_DIR
-    
-    # Set up temporary models directory
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     
-    with patch.object(config, "MODELS_DIR", models_dir):
+    # We patch it everywhere it might be imported at module level
+    with patch("kitten_cli.config.MODELS_DIR", models_dir), \
+         patch("kitten_cli.models.MODELS_DIR", models_dir, create=True), \
+         patch("kitten_cli.speak.MODELS_DIR", models_dir, create=True), \
+         patch("kitten_cli.cli.MODELS_DIR", models_dir, create=True):
         yield models_dir
-    
-    # Restore original
-    config.MODELS_DIR = original_models_dir
 
 
 @pytest.fixture

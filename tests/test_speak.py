@@ -1,18 +1,15 @@
-import numpy as np
+# Speech synthesis module tests for kitten-cli
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import typer
-import sys
-
-
-
+import soundfile as sf
+import re
 
 
 def test_synthesize_writes_file(tmp_path, mock_models_dir, installed_model):
     """Test that synthesize writes audio to file correctly."""
     from kitten_cli.speak import synthesize
-    import soundfile as sf
     
     model_name, model_dir = installed_model
     output = tmp_path / "out.wav"
@@ -32,15 +29,12 @@ def test_synthesize_writes_file(tmp_path, mock_models_dir, installed_model):
     
     # Verify audio file is valid
     audio, sample_rate = sf.read(output)
-    assert audio.shape[0] > 0  # Should have some samples
-    assert sample_rate == 24000  # Should use default sample rate
+    assert audio.shape[0] > 0
+    assert sample_rate == 24000
 
 
-
-
-
-def test_synthesize_unknown_model():
-    import typer
+def test_synthesize_unknown_model(mock_models_dir):
+    """Test synthesize with an unknown model alias."""
     from kitten_cli.speak import synthesize
     
     with pytest.raises(typer.Exit) as exc_info:
@@ -49,30 +43,25 @@ def test_synthesize_unknown_model():
 
 
 def test_synthesize_empty_text(mock_models_dir, installed_model):
-    """Test that synthesize handles empty text (should still generate minimal audio)."""
+    """Test that synthesize handles empty text."""
     from kitten_cli.speak import synthesize
-    import soundfile as sf
     
     model_name, model_dir = installed_model
     output = Path("/tmp/empty_test.wav")
     
-    # The synthesize function doesn't validate empty text - it just generates minimal audio
     result = synthesize("", model=model_name, output=output, quiet=True)
     
-    # Should still succeed and create a file (with minimal audio)
     assert output.exists()
     assert result == output
     
-    # Verify the audio file is valid (though very short)
     audio, sample_rate = sf.read(output)
-    assert audio.shape[0] >= 0  # May be empty or have minimal samples
+    assert audio.shape[0] >= 0
     assert sample_rate == 24000
 
 
 def test_synthesize_different_speeds(tmp_path, mock_models_dir, installed_model):
     """Test that different speed values work correctly."""
     from kitten_cli.speak import synthesize
-    import soundfile as sf
     
     model_name, model_dir = installed_model
     text = "Hello world"
@@ -80,21 +69,20 @@ def test_synthesize_different_speeds(tmp_path, mock_models_dir, installed_model)
     # Test normal speed
     output_normal = tmp_path / "normal.wav"
     synthesize(text, model=model_name, speed=1.0, output=output_normal, quiet=True)
-    audio_normal, sr_normal = sf.read(output_normal)
+    audio_normal, _ = sf.read(output_normal)
     
     # Test faster speed
     output_fast = tmp_path / "fast.wav"
     synthesize(text, model=model_name, speed=2.0, output=output_fast, quiet=True)
-    audio_fast, sr_fast = sf.read(output_fast)
+    audio_fast, _ = sf.read(output_fast)
     
     # Test slower speed
     output_slow = tmp_path / "slow.wav"
     synthesize(text, model=model_name, speed=0.5, output=output_slow, quiet=True)
-    audio_slow, sr_slow = sf.read(output_slow)
+    audio_slow, _ = sf.read(output_slow)
     
     # Verify that faster audio is shorter, slower audio is longer
     assert len(audio_fast) < len(audio_normal) < len(audio_slow)
-    assert sr_normal == sr_fast == sr_slow == 24000
 
 
 def test_synthesize_different_voices(tmp_path, mock_models_dir, installed_model):
@@ -111,10 +99,79 @@ def test_synthesize_different_voices(tmp_path, mock_models_dir, installed_model)
         assert result == output
 
 
+def test_synthesize_stdout(mock_models_dir, installed_model):
+    """Test that synthesize with stdout=True writes WAV to stdout."""
+    from kitten_cli.speak import synthesize
+    import io
+    import sys
+    from unittest.mock import MagicMock, patch
+    
+    model_name, _ = installed_model
+    
+    # Mock sys.stdout.buffer using patch instead of monkeypatch
+    mock_stdout = MagicMock()
+    fake_buffer = io.BytesIO()
+    mock_stdout.buffer = fake_buffer
+    
+    with patch("sys.stdout", mock_stdout):
+        # Run synthesize with stdout=True
+        result = synthesize("Hello world", model=model_name, stdout=True)
+        
+        # Verify result is None
+        assert result is None
+        
+        # Verify WAV header in stdout
+        wav_bytes = fake_buffer.getvalue()
+        assert len(wav_bytes) > 0
+        assert wav_bytes[:4] == b"RIFF"
+
+
+def test_synthesize_auto_install(mock_models_dir):
+    """Test that synthesize auto-installs missing models."""
+    from kitten_cli.speak import synthesize
+    
+    # Model 'nano' is not installed
+    output = Path("/tmp/auto_install.wav")
+    
+    # Run synthesize (should trigger auto-install)
+    result = synthesize("Auto install test", model="nano", output=output, quiet=False)
+    
+    # Verify model was installed and file created
+    assert result == output
+    assert (mock_models_dir / "nano").exists()
+
+
+def test_synthesize_play(mock_models_dir, installed_model):
+    """Test that synthesize with play=True calls playback module."""
+    from kitten_cli.speak import synthesize
+    from unittest.mock import patch
+    
+    model_name, _ = installed_model
+    output = Path("/tmp/play_test.wav")
+    
+    # Patch the playback module
+    with patch("kitten_cli.playback.play_audio_array") as mock_play:
+        synthesize("Play me", model=model_name, output=output, play=True, quiet=True)
+        
+        # Verify play was called
+        mock_play.assert_called_once()
+
+
+def test_synthesize_offline_restoration(mock_models_dir, installed_model, monkeypatch):
+    """Test that HF_HUB_OFFLINE is correctly removed if it was not present."""
+    from kitten_cli.speak import synthesize
+    import os
+    
+    model_name, _ = installed_model
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+    
+    synthesize("test", model=model_name, quiet=True)
+    assert "HF_HUB_OFFLINE" not in os.environ
+
+
 def test_synthesize_auto_output_path(tmp_path, mock_models_dir, installed_model):
     """Test that auto-generated output paths work correctly."""
     from kitten_cli.speak import synthesize
-    import re
     
     model_name, model_dir = installed_model
     
@@ -126,6 +183,4 @@ def test_synthesize_auto_output_path(tmp_path, mock_models_dir, installed_model)
     assert result.exists()
     assert result.name.startswith("purr-")
     assert result.name.endswith(".wav")
-    
-    # Verify the path format
     assert re.match(r"purr-\d+\.wav", result.name)

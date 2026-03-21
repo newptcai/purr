@@ -90,10 +90,16 @@ def voices(
 
     model_dir = MODELS_DIR / model
     repo_id = MODEL_REGISTRY[model]
+    original_offline = os.environ.get("HF_HUB_OFFLINE")
     os.environ["HF_HUB_OFFLINE"] = "1"
-    from kittentts import KittenTTS  # type: ignore
-    tts = KittenTTS(repo_id, cache_dir=str(model_dir))
-    del os.environ["HF_HUB_OFFLINE"]
+    try:
+        from kittentts import KittenTTS  # type: ignore
+        tts = KittenTTS(repo_id, cache_dir=str(model_dir))
+    finally:
+        if original_offline is not None:
+            os.environ["HF_HUB_OFFLINE"] = original_offline
+        else:
+            del os.environ["HF_HUB_OFFLINE"]
 
     for v in tts.available_voices:
         typer.echo(f"  {v}")

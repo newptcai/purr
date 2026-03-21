@@ -4,7 +4,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 
-def test_model_list_command():
+def test_model_list_command(mock_models_dir):
     """Test the 'purr model list' command."""
     from kitten_cli.cli import app
     
@@ -112,6 +112,80 @@ def test_voices_command_unknown_model():
     assert result.exit_code == 1
     # Typer echoes to stderr by default
     assert "Unknown model alias 'unknown-model'" in result.stderr
+
+
+def test_voices_command_success(mock_models_dir, installed_model):
+    """Test the 'purr voices' command with an installed model."""
+    from kitten_cli.cli import app
+    
+    runner = CliRunner()
+    result = runner.invoke(app, ["voices", "--model", installed_model[0]])
+    
+    assert result.exit_code == 0
+    # Mock voices from tests/mock_kittentts.py are Jasper, Luna, Mia, Ryan
+    assert "Jasper" in result.stdout
+    assert "Luna" in result.stdout
+
+
+def test_voices_command_auto_install(mock_models_dir):
+    """Test 'purr voices' with a non-installed model (should auto-install)."""
+    from kitten_cli.cli import app
+    
+    runner = CliRunner()
+    # Use a valid model alias that isn't installed
+    result = runner.invoke(app, ["voices", "--model", "nano"])
+    
+    assert result.exit_code == 0
+    assert "Model 'nano' not found locally. Downloading ..." in result.stdout
+    assert "Jasper" in result.stdout
+
+
+def test_speak_command_stdin():
+    """Test the 'purr speak' command reading from stdin."""
+    from kitten_cli.cli import app
+    
+    runner = CliRunner()
+    # Provide text via input parameter (simulates stdin)
+    result = runner.invoke(app, ["speak"], input="Hello from stdin")
+    
+    assert result.exit_code == 0
+    assert "Saved to" in result.stdout
+
+
+def test_voices_offline_restoration(mock_models_dir, installed_model, monkeypatch):
+    """Test that voices command correctly restores HF_HUB_OFFLINE."""
+    from kitten_cli.cli import voices
+    import os
+    
+    model_name, _ = installed_model
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+    
+    voices(model=model_name)
+    assert "HF_HUB_OFFLINE" not in os.environ
+
+
+def test_speak_command_tty_error():
+    """Test the 'purr speak' command when no text is provided and it's a TTY."""
+    from kitten_cli.cli import speak
+    from unittest.mock import MagicMock, patch
+    import typer
+    
+    # Patch isatty at the module level where it's used
+    with patch("kitten_cli.cli.sys.stdin.isatty", return_value=True):
+        with pytest.raises(typer.Exit) as exc_info:
+            speak(text=None)
+        assert exc_info.value.exit_code == 1
+
+
+def test_model_install_command_success(mock_models_dir):
+    """Test the 'purr model install' command."""
+    from kitten_cli.cli import app
+    
+    runner = CliRunner()
+    result = runner.invoke(app, ["model", "install", "nano"])
+    
+    assert result.exit_code == 0
+    assert "Model 'nano' installed" in result.stdout
 
 
 def test_help_command():

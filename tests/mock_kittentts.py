@@ -59,6 +59,4 @@ class KittenTTS:
         return self.generate(*args, **kwargs)
 
 
-def __version__():
-    """Mock version function."""
-    return "1.0.0-mock"
+__version__ = "1.0.0-mock"
