@@ -32,6 +32,8 @@ uv tool install .
 
 ## Quick Start
 
+📖 **Check out [repy](https://github.com/newptcai/repy) — a terminal epub reader that uses `purr` as its default TTS engine.**
+
 ```bash
 # List available models
 purr model list
@@ -103,3 +105,7 @@ Respects `$XDG_CACHE_HOME` if set.
 ## License
 
 MIT
+
+## Integration
+
+`purr` is the default TTS tool in [repy](https://github.com/newptcai/repy), a terminal epub reader written in Rust.
