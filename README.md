@@ -104,7 +104,7 @@ Respects `$XDG_CACHE_HOME` if set.
 
 ## License
 
-MIT
+Apache License 2.0, matching KittenTTS.
 
 ## Integration
 
