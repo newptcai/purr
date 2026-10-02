@@ -5,30 +5,22 @@ text-to-speech on CPU, with model management and optional audio playback.
 
 ## Installation
 
-> **Note:** Linux only. Requires Python ≥ 3.8 and [`uv`](https://github.com/astral-sh/uv).
-
-### Recommended: lean install (no torch/CUDA)
-
-The default install pulls `torch` and NVIDIA CUDA packages (several GB) as an unnecessary
-side-effect of `kittentts → misaki[en] → spacy-curated-transformers`. Use the provided script
-to bypass this:
+> **Note:** Linux only. Requires Python ≥ 3.8, [`uv`](https://github.com/astral-sh/uv), and `git`.
 
 ```bash
 git clone https://github.com/newptcai/purr
 cd purr
-bash install.sh
+bash install.sh        # or: uv tool install .
 ```
 
 `install.sh` installs `purr` as a [uv tool](https://docs.astral.sh/uv/guides/tools/), so it is
-available on your PATH immediately — no virtual environment activation needed.
+available on your PATH immediately — no virtual environment activation needed. Re-run it after
+`git pull` to update.
 
-### Simple install (includes torch/CUDA bloat)
-
-```bash
-git clone https://github.com/newptcai/purr
-cd purr
-uv tool install .
-```
+The install is lean (about 180 MB, no `torch` or CUDA). `purr` pins `kittentts` to an upstream
+commit that dropped the `misaki → spaCy → torch` dependency chain; the latest tagged KittenTTS
+release (0.8.1) still pulls several GB of NVIDIA packages. Because the dependency is fetched from
+GitHub, `git` must be on your PATH.
 
 ## Quick Start
 

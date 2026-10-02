@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
-# Lean install for purr as a uv tool — avoids the torch/CUDA bloat caused by
-# misaki[en] → spacy-curated-transformers → torch.
+# Install (or reinstall) purr as a uv tool from this source tree.
 #
-# Strategy: exclude spacy-curated-transformers from resolution so the torch
-# dependency chain is never pulled in.
+# kittentts is pinned to an upstream commit that no longer depends on
+# misaki/spaCy, so no torch/CUDA packages are pulled in and no excludes are needed.
 set -euo pipefail
 
-EXCLUDES=$(mktemp)
-trap "rm -f $EXCLUDES" EXIT
-echo "spacy-curated-transformers" > "$EXCLUDES"
-
-uv tool install --reinstall --excludes "$EXCLUDES" .
+uv tool install --reinstall .

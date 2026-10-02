@@ -5,12 +5,10 @@
 ```bash
 uv venv
 source .venv/bin/activate
-bash install.sh          # lean install — no torch/CUDA bloat
-uv pip install -e .      # install purr itself in editable mode
+uv pip install -e .      # editable install; kittentts is pinned to a lean upstream commit (no torch)
 ```
 
-`install.sh` installs kittentts and its deps manually, skipping `spacy-curated-transformers`
-which is the transitive source of torch. Then `-e .` wires up the local source.
+`bash install.sh` installs purr as a uv tool (`uv tool install --reinstall .`) for everyday use.
 
 ## Running tests
 
