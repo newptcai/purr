@@ -200,3 +200,25 @@ def test_help_command():
     assert "speak" in result.stdout
     assert "model" in result.stdout
     assert "voices" in result.stdout
+
+def test_version_option():
+    """Test that 'purr --version' prints the package version."""
+    from kitten_cli import __version__
+    from kitten_cli.cli import app
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+    assert result.stdout.strip() == f"purr {__version__}"
+
+
+def test_version_matches_pyproject():
+    """Test that __version__ is the single source of truth for the package version."""
+    tomllib = pytest.importorskip("tomllib")
+    from kitten_cli import __version__
+
+    pyproject = tomllib.loads((Path(__file__).parent.parent / "pyproject.toml").read_text())
+    assert "version" in pyproject["project"]["dynamic"]
+    assert pyproject["tool"]["hatch"]["version"]["path"] == "src/kitten_cli/__init__.py"
+    assert __version__ == "0.2.0"

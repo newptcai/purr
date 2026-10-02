@@ -48,6 +48,9 @@ purr speak "Hello, world." --stdout | aplay -
 
 # List voices for the active model
 purr voices
+
+# Show the installed version
+purr --version
 ```
 
 ## Commands

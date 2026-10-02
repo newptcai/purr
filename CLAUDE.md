@@ -10,6 +10,9 @@ uv pip install -e .      # editable install; kittentts is pinned to a lean upstr
 
 `bash install.sh` installs purr as a uv tool (`uv tool install --reinstall .`) for everyday use.
 
+The version lives only in `src/kitten_cli/__init__.py` (`__version__`); `pyproject.toml` reads it
+via hatch, and `purr --version` prints it. Bump it there.
+
 ## Running tests
 
 ```bash

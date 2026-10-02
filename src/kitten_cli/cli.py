@@ -11,6 +11,22 @@ model_app = typer.Typer(help="Manage KittenTTS models.")
 app.add_typer(model_app, name="model")
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        from kitten_cli import __version__
+        typer.echo(f"purr {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: bool = typer.Option(
+        False, "--version", callback=_version_callback, is_eager=True, help="Show the version and exit."
+    ),
+) -> None:
+    """purr — KittenTTS CLI for model management and speech synthesis."""
+
+
 @model_app.command("list")
 def model_list() -> None:
     """List available models and their installation status."""

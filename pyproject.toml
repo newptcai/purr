@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "purr"
-version = "0.2.0"
+dynamic = ["version"]
 description = "CLI wrapper for KittenTTS — model management and speech synthesis"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -23,6 +23,9 @@ dependencies = [
 
 [project.scripts]
 purr = "kitten_cli.cli:app"
+
+[tool.hatch.version]
+path = "src/kitten_cli/__init__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
